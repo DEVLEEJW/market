@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    url: jdbc:log4jdbc:mysql://localhost:3306/market?characterEncoding=UTF-8
+    username: root
+    password: 1234
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      max-lifetime: 1800000 
+      poolName : HikariCP
+      readOnly : false
+      connectionTestQuery : SELECT 1
+  thymeleaf:
+    cache: false
+
+server:
+  servlet:
+    session:
+      timeout: 1800
