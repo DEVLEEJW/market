@@ -16,11 +16,13 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import hello.market.common.address.dto.AddressDto;
 import hello.market.common.address.dto.entity.AddressSd;
@@ -86,22 +88,31 @@ public class MemberController {
 	
 	@GetMapping("/member/{email}")
 	public String myPageForm(@PathVariable String email, Model model) {
+		model.addAttribute("addressSd", addressService.findAllSd());
+		model.addAttribute("addressSgg", addressService.findAllSgg());
+		model.addAttribute("addressUmd", addressService.findAllUmd());
 		model.addAttribute("member", memberService.loadUserByUsername(email));
 		return "/market/member/myPage";
 	}
 	
 	@PostMapping("/member/{email}")
-	public String myPage(@PathVariable String email, @Validated @ModelAttribute("member") MemberDto memberDto, BindingResult result) {
-		if (!memberDto.getPassword().isBlank()) {
+	public String myPage(@PathVariable String email, @Validated @ModelAttribute("member") MemberDto memberDto
+			, BindingResult result, RedirectAttributes redirectAttributes, Model model) {
+		if (memberDto.getPassword() != null) {
 			boolean matches = memberService.matchesPassword(memberDto);
 			if (!matches) {
-				result.rejectValue("password", null, "비밀번호가 틀립니다.");
+				result.rejectValue("password", null, "비밀번호가 다릅니다.");
 			}
 		}
 		if (result.hasErrors()) {
+			model.addAttribute("addressSd", addressService.findAllSd());
+			model.addAttribute("addressSgg", addressService.findAllSgg());
+			model.addAttribute("addressUmd", addressService.findAllUmd());
 			log.info("myPage BindingResult={}", result);
 			return "/market/member/myPage";
 		}
-		return "redirect:/member/{id}";
+		redirectAttributes.addAttribute("status", "success");
+		memberService.modify(memberDto);
+		return "redirect:/member/{email}";
 	}
 }

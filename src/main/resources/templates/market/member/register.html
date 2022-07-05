@@ -25,7 +25,7 @@
         <br />
         <div>
             <label for="name">닉네임</label>
-            <input type="password" id="name" th:field="*{name}" class="form-control" placeholder="닉네임을 입력하세요.">
+            <input type="text" id="name" th:field="*{name}" class="form-control" placeholder="닉네임을 입력하세요.">
             <div class="field-error" th:errors="*{name}"></div>
         </div>
         <br />
@@ -39,13 +39,11 @@
         	<div class="col">
 	            <label for="sggId">시/군/구</label>
 	            <select class="form-control" id="sggId" name="sggId">
-	            	<option th:each="addrSgg : ${addressSgg}" th:value="${addrSgg?.id}" th:utext="${addrSgg?.sgg}"></option>
 	            </select>
 	        </div>
         	<div class="col">
 	            <label for="umdId">읍/면/동</label>
 	            <select class="form-control" id="umdId" name="umdId">
-		            <option th:each="addrUmd : ${addressUmd}" th:value="${addrUmd?.id}" th:utext="${addrUmd?.Umd}"></option>
 	            </select>
 	        </div>
         </div>
@@ -64,9 +62,101 @@
     </form>
     
     <script th:inline="javascript">
-		let addrSelect = document.getElementById("sdId");
-    	addrSelect.addEventListener("change", function() {
+		const selectSd = document.getElementById("sdId");
+		const selectSgg = document.getElementById("sggId");
+		const selectUmd = document.getElementById("umdId");
+		
+    	let addrSdId = [[${addressSd[0].id}]];
+		let addrSggId = [[${addressSgg[0].id}]];
+		
+    	$(function() {
+			// 초기 주소 값 세팅
+			fn_init();	
 		});
+		
+		// 시/도 변경 이벤트
+		selectSd.addEventListener("change", function(e) {
+			fn_addressSdEvent(this);
+		});
+		
+		// 시/군/구 변경 이벤트
+		selectSgg.addEventListener("change", function(e) {
+			fn_addressSggEvent(this);
+		});
+		
+		function fn_init() {
+			[# th:each="addrSgg: ${addressSgg}"]
+				var addrSgg = [[${addrSgg}]];
+				if (addrSdId == addrSgg.sdId) {
+					var opt = document.createElement("option");
+					opt.value = addrSgg.id;
+					opt.innerText = addrSgg.sgg;
+					selectSgg.appendChild(opt);
+				}
+			[/]
+			
+			[# th:each="addrUmd: ${addressUmd}"]
+				var addrUmd = [[${addrUmd}]];
+				if (addrSdId == addrUmd.sdId && addrSggId == addrUmd.sggId) {
+					var opt = document.createElement("option");
+					opt.value = addrUmd.id;
+					opt.innerText = addrUmd.umd;
+					selectUmd.appendChild(opt);
+				}
+			[/]
+		}
+		
+		function fn_addressSdEvent(obj) {
+			while (selectSgg.hasChildNodes()) {
+				selectSgg.removeChild(selectSgg.firstChild);
+			}
+			while (selectUmd.hasChildNodes()) {
+				selectUmd.removeChild(selectUmd.firstChild);
+			}
+			
+			addrSdId = obj.value;
+			
+			[# th:each="addrSgg: ${addressSgg}"]
+				var addrSgg = [[${addrSgg}]];
+				if (addrSdId == addrSgg.sdId) {
+					var opt = document.createElement("option");
+					opt.value = addrSgg.id;
+					opt.innerText = addrSgg.sgg;
+					selectSgg.appendChild(opt);
+				}
+			[/]
+			
+			addrSggId = selectSgg.value;
+			
+			[# th:each="addrUmd: ${addressUmd}"]
+				var addrUmd = [[${addrUmd}]];
+				if (addrSdId == addrUmd.sdId && addrSggId == addrUmd.sggId) {
+					var opt = document.createElement("option");
+					opt.value = addrUmd.id;
+					opt.innerText = addrUmd.umd;
+					selectUmd.appendChild(opt);
+				}
+			[/]
+		}
+		
+		function fn_addressSggEvent(obj) {
+			while (selectUmd.hasChildNodes()) {
+				selectUmd.removeChild(selectUmd.firstChild);
+			}
+			
+			addrSdId = selectSd.value;
+			addrSggId = obj.value;
+			
+			[# th:each="addrUmd: ${addressUmd}"]
+				var addrUmd = [[${addrUmd}]];
+				if (addrSdId == addrUmd.sdId && addrSggId == addrUmd.sggId) {
+					var opt = document.createElement("option");
+					opt.value = addrUmd.id;
+					opt.innerText = addrUmd.umd;
+					selectUmd.appendChild(opt);
+				}
+			[/]
+		}
     </script>
     
 </th:block>

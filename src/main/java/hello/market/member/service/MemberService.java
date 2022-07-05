@@ -37,7 +37,7 @@ public class MemberService implements UserDetailsService {
 		return new BCryptPasswordEncoder().matches(memberDto.getPassword(), loadUserByUsername(memberDto.getEmail()).getPassword());
 	}
 	
-	public Member modify(MemberDto memberDto) {
-		return null;
+	public int modify(MemberDto memberDto) {
+		return memberRepository.updateByMember(memberDto.getName(), memberDto.getSdId(), memberDto.getSggId(), memberDto.getUmdId(), memberDto.getId());
 	}
 }

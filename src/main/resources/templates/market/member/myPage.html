@@ -9,6 +9,7 @@
 		<h2>마이 페이지</h2>
 	</div>
 	<form th:action="@{|/member/${#authentication.principal.email}|}" th:object="${member}" method="post">
+		<input type="hidden" id="id" name="id" th:value="*{id}">
 		<table class="table">
 			<tbody>
 				<tr>
@@ -24,6 +25,38 @@
 						<div class="field-error" th:errors="*{password}"></div>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row">닉네임</th>
+					<td>
+						<input type="text" class="form-control" id="name" name="name" th:value="*{name}">
+						<div class="field-error" th:errors="*{name}"></div>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">
+						<div class="row">
+				        	<div class="col">
+					            <label for="sdId">시/도</label>
+					            <select class="form-control" id="sdId" name="sdId">
+					            	<option th:each="addrSd : ${addressSd}" th:value="${addrSd?.id}" th:utext="${addrSd?.sd}"></option>
+					            </select>
+					            <div class="field-error" th:errors="*{sdId}"></div>
+					        </div>
+				        	<div class="col">
+					            <label for="sggId">시/군/구</label>
+					            <select class="form-control" id="sggId" name="sggId">
+					            </select>
+					            <div class="field-error" th:errors="*{sggId}"></div>
+					        </div>
+				        	<div class="col">
+					            <label for="umdId">읍/면/동</label>
+					            <select class="form-control" id="umdId" name="umdId">
+					            </select>
+					            <div class="field-error" th:errors="*{umdId}"></div>
+					        </div>
+				        </div>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 		<div class="row">
@@ -35,6 +68,140 @@
 			</div>
 		</div>
 	</form>
+	
+	<script th:inline="javascript">
+		const selectSd = document.getElementById("sdId");
+		const selectSgg = document.getElementById("sggId");
+		const selectUmd = document.getElementById("umdId");
+		
+		const member = [[${member}]];
+		
+    	let addrSdId = [[${addressSd[0].id}]];
+		let addrSggId = [[${addressSgg[0].id}]];
+		
+    	$(function() {
+			var status = [[${param.status}]];
+			if (status == "success") {
+				alert("수정되었습니다.");
+				history.replaceState({}, null, location.pathname);
+			}
+	
+			// 초기 주소 값 세팅
+			fn_addrInit();
+			
+			// 이벤트 세팅
+			fn_setEvents();
+		});
+		
+		function fn_setEvents() {
+			// 시/도 변경 이벤트
+			selectSd.addEventListener("change", function(e) {
+				fn_addressSdEvent(this);
+			});
+			
+			// 시/군/구 변경 이벤트
+			selectSgg.addEventListener("change", function(e) {
+				fn_addressSggEvent(this);
+			});
+		}
+		
+		function fn_addrInit() {
+			// 시/도
+			for (var i = 0; i < selectSd.children.length; i++) {
+				if (member.sdId == selectSd.children[i].value) {
+					selectSd.children[i].setAttribute("selected", "");
+					break;
+				}
+			}
+			
+			[# th:each="addrSgg: ${addressSgg}"]
+				var addrSgg = [[${addrSgg}]];
+				if (member.sdId == addrSgg.sdId) {
+					var opt = document.createElement("option");
+					opt.value = addrSgg.id;
+					opt.innerText = addrSgg.sgg;
+					selectSgg.appendChild(opt);
+				}
+			[/]
+			
+			[# th:each="addrUmd: ${addressUmd}"]
+				var addrUmd = [[${addrUmd}]];
+				if (member.sdId == addrUmd.sdId && member.sggId == addrUmd.sggId) {
+					var opt = document.createElement("option");
+					opt.value = addrUmd.id;
+					opt.innerText = addrUmd.umd;
+					selectUmd.appendChild(opt);
+				}
+			[/]
+			
+			for (var i = 0; i < selectSgg.children.length; i++) {
+				if (member.sggId == selectSgg.children[i].value) {
+					selectSgg.children[i].setAttribute("selected", "");
+					break;
+				}
+			}
+			
+			for (var i = 0; i < selectUmd.children.length; i++) {
+				if (member.umdId == selectUmd.children[i].value) {
+					selectUmd.children[i].setAttribute("selected", "");
+					break;
+				}
+			}
+		}
+		
+		function fn_addressSdEvent(obj) {
+			while (selectSgg.hasChildNodes()) {
+				selectSgg.removeChild(selectSgg.firstChild);
+			}
+			while (selectUmd.hasChildNodes()) {
+				selectUmd.removeChild(selectUmd.firstChild);
+			}
+			
+			addrSdId = obj.value;
+			
+			[# th:each="addrSgg: ${addressSgg}"]
+				var addrSgg = [[${addrSgg}]];
+				if (addrSdId == addrSgg.sdId) {
+					var opt = document.createElement("option");
+					opt.value = addrSgg.id;
+					opt.innerText = addrSgg.sgg;
+					selectSgg.appendChild(opt);
+				}
+			[/]
+			
+			addrSggId = selectSgg.value;
+			
+			[# th:each="addrUmd: ${addressUmd}"]
+				var addrUmd = [[${addrUmd}]];
+				if (addrSdId == addrUmd.sdId && addrSggId == addrUmd.sggId) {
+					var opt = document.createElement("option");
+					opt.value = addrUmd.id;
+					opt.innerText = addrUmd.umd;
+					selectUmd.appendChild(opt);
+				}
+			[/]
+		}
+		
+		function fn_addressSggEvent(obj) {
+			while (selectUmd.hasChildNodes()) {
+				selectUmd.removeChild(selectUmd.firstChild);
+			}
+			
+			addrSdId = selectSd.value;
+			addrSggId = obj.value;
+			
+			[# th:each="addrUmd: ${addressUmd}"]
+				var addrUmd = [[${addrUmd}]];
+				if (addrSdId == addrUmd.sdId && addrSggId == addrUmd.sggId) {
+					var opt = document.createElement("option");
+					opt.value = addrUmd.id;
+					opt.innerText = addrUmd.umd;
+					selectUmd.appendChild(opt);
+				}
+			[/]
+		}
+	</script>
+	
 </th:block>
 
 </html>
